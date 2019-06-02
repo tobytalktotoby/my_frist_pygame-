@@ -1,0 +1,248 @@
+#coding=utf-8
+
+import sys
+
+import pygame
+from pygame.locals import *  # 里面很多常量，比如键位，其他未测试。
+import random
+# 定义窗口的分辨率
+resolution=width,height=600,400
+#一般海螺?
+class conch(pygame.sprite.Sprite):
+    
+    def __init__(self, conch_surface, conch_initial_position, conch_acceleration):    
+        pygame.sprite.Sprite.__init__(self)
+        self.image=conch_surface
+        self.rect=self.image.get_rect()          #取得图片大小，图片要是不累赘可以直接用
+        self.rect.topleft=conch_initial_position
+        self.acceleration=conch_acceleration
+        self.bullets=pygame.sprite.Group()
+
+        self.maxvelocity = 5
+        self.x_velocity = 0
+        self.y_velocity = 0
+
+    def move(self,move_time_x,move_time_y):
+        if abs(self.x_velocity)<self.maxvelocity :
+            self.x_velocity=move_time_x*self.acceleration
+            x=self.rect.left+self.x_velocity
+        elif abs(self.x_velocity)>=self.maxvelocity:
+            self.x_velocity=self.x_velocity-self.x_velocity/abs(self.x_velocity)*(self.acceleration+1)
+            x=self.rect.left+self.x_velocity
+            
+        else:
+            print("error01")
+
+        
+        if abs(self.y_velocity)<self.maxvelocity :
+            self.y_velocity=move_time_y*self.acceleration
+            y=self.rect.top+self.y_velocity
+        elif abs(self.y_velocity)>=self.maxvelocity :
+            self.y_velocity=self.y_velocity-self.y_velocity/abs(self.x_velocity)*(self.acceleration+1)
+            y=self.rect.top+self.y_velocity 
+        else:
+            print("error02")
+        
+        
+
+
+        #vvvv如果知道如何获取图片像素就可以吧-69(self.rect.width)改了。vvvv
+        if x<-self.rect.width-1:
+            self.rect.left=width+self.rect.width
+        elif x>width+self.rect.width+1:
+            self.rect.left=-self.rect.width
+        else:
+            self.rect.left=x
+
+        ####这个看着改感觉和跳跃挂钩，看着改#####
+        if y<0:
+            self.rect.top=0
+        elif y>height-self.rect.height:
+
+            self.rect.top=height-self.rect.height
+        else:
+            self.rect.top=y
+
+
+    def shoot(self,bullet_surface):
+        bullets_0=bullet(bullet_surface,self.rect.midtop,4)
+        self.bullets.add(bullets_0)
+
+        
+
+class bullet(pygame.sprite.Sprite):
+    def __init__(self,bullet_surface,butllet_initialization_position,bullet_speed):
+        pygame.sprite.Sprite.__init__(self)
+        self.image=bullet_surface
+        self.rect=self.image.get_rect()
+        self.rect.topleft=butllet_initialization_position
+        self.velocity=bullet_speed
+    
+
+    def update(self):
+        self.rect.left+=self.velocity
+        if self.rect.left>width:
+            self.kill() 
+        if self.rect.left<0:
+            self.kill()
+            
+
+class enemy(pygame.sprite.Sprite):
+    def __init__(self,enemy_picture,enemy_position):
+        pygame.sprite.Sprite.__init__(self)
+        self.image=enemy_picture
+        self.rect=self.image.get_rect()
+        self.rect.topleft=enemy_position
+        self.bullets=pygame.sprite.Group()
+        self.veloctiy=2
+        self.dead_image_id=0
+
+    def move(self):
+        self.rect.top=self.rect.top+random.randint(-2,3)
+        if self.rect.top<0:
+            self.kill()
+            
+            print('killenemy1')
+        if self.rect.top>350:
+            self.kill()
+            
+            print('killenemy2')
+
+
+    def shoot(self,enemy_bullet_image):
+        enemy_bullet=bullet(enemy_bullet_image,self.rect.midleft,-2)
+        self.bullets.add(enemy_bullet)
+
+    def update(self,conch_hero_pos):
+        self.move()
+        if abs(self.rect.top-conch_hero_pos)<6:
+            
+            self.shoot(enemies_bullet_image)
+        
+        self.bullets.update()
+        self.bullets.draw(screen)
+        enemies.draw(screen)
+
+
+
+
+
+
+
+
+
+#initialization game
+pygame.init()
+
+
+#initialization screen
+screen=pygame.display.set_mode(resolution)
+pygame.display.set_caption('conchboss')
+background=pygame.image.load('IMG/background_sea.jpg')
+conch_hero_image=pygame.image.load('IMG/conch_hero69x140.png')
+conch_bullet_image=pygame.image.load('IMG/intro_ball.gif')
+
+enemies=pygame.sprite.Group()
+enemies_image=pygame.image.load('IMG/BIGenemy.jpg')
+enemies_image=pygame.transform.scale(enemies_image,(80,80))
+enemies_bullet_image=pygame.image.load('IMG/bullet.jpg')
+enemies_bullet_image=pygame.transform.scale(enemies_bullet_image,(40,40))
+explode_image=pygame.image.load('IMG/explode.jpg')
+
+grave=pygame.sprite.Group()
+explode_surface=[]
+explode_surface.append(explode_image.subsurface(pygame.Rect(0,0,75,67)))
+explode_surface.append(explode_image.subsurface(pygame.Rect(75,0,75,67)))
+explode_surface.append(explode_image.subsurface(pygame.Rect(0,67,75,67)))
+explode_surface.append(explode_image.subsurface(pygame.Rect(75,67,75,67)))
+
+
+hero1_rect = pygame.Rect(0, 0, 69,140)    #RECT(以此宽度开始截取,以此高度开始截取,选取区域宽,选取区域长)
+hero2_rect = pygame.Rect(20, 90, 40, 50)
+
+conch_hero_surface=[]
+conch_hero_surface.append(conch_hero_image.subsurface(hero1_rect))
+conch_hero_surface.append(conch_hero_image.subsurface(hero2_rect))
+hero_pos = [ 200,  200]
+
+counter=0
+FPS=60 
+TIMEX=0
+TIMEY=0
+clock=pygame.time.Clock()
+CCConch_hero = conch(conch_hero_surface[0],hero_pos,2)
+
+
+
+
+
+
+
+
+
+while 1:
+    clock.tick(FPS)
+    screen.blit(background,(0,0))
+    
+    if counter>100:
+        counter=0
+    counter+=1
+    CCConch_hero.image=conch_hero_surface[counter//10%2]
+    
+    screen.blit(CCConch_hero.image,CCConch_hero.rect.topleft)
+    CCConch_hero.bullets.update()
+    CCConch_hero.bullets.draw(screen)
+
+    
+    if  not len(enemies.sprites()) :
+         
+        enemy_01=enemy(enemies_image,(500,100))
+        enemies.add(enemy_01)
+    enemies.update(CCConch_hero.rect.top)    
+    
+    
+    grave.add(pygame.sprite.groupcollide(enemies,CCConch_hero.bullets,1,1))
+    for dead in grave:
+        screen.blit(explode_surface[dead.dead_image_id],dead.rect)
+        if counter%4==0:
+            if dead.dead_image_id<3:
+                dead.dead_image_id+=1
+            else :
+                grave.remove(dead)
+    pygame.display.update()
+
+
+    for event in pygame.event.get():
+        if event.type== pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+
+        if event.type==pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                TIMEY-=1
+            elif event.key==pygame.K_DOWN:
+                TIMEY+=1
+                print(TIMEY)
+            elif event.key==pygame.K_LEFT:
+                TIMEX-=1
+            elif event.key==pygame.K_RIGHT:
+                TIMEX+=1
+            elif event.key==pygame.K_a:
+                CCConch_hero.shoot(conch_bullet_image)
+
+
+        if event.type==pygame.KEYUP:
+            if event.key == pygame.K_UP:
+                TIMEY=0
+            elif event.key==pygame.K_DOWN:
+                TIMEY=0
+            elif event.key==pygame.K_LEFT:
+                TIMEX=0
+            elif event.key==pygame.K_RIGHT:
+                TIMEX=0
+            
+
+        
+
+    CCConch_hero.move(TIMEX,TIMEY)
