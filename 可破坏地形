@@ -1,0 +1,252 @@
+#coding=utf-8
+"""python3 UTF -8 变量名可以是中文。。"""
+
+import sys
+import numpy
+import pygame
+from pygame.locals import *
+
+"""
+-----------------------------------------------类，函数和常量---------------------------------
+"""
+class map(pygame.sprite.Sprite):
+    def __init__(self,map_image,map_position):
+        pygame.sprite.Sprite.__init__(self)
+        self.image=map_image
+        self.rect=self.image.get_rect()
+        self.rect.topleft=map_position
+        self.mask=pygame.mask.from_surface(self.image)
+    
+    def destructible(self,I_missile_x,I_missile_y,I_missile_r):
+        """
+        我今天不舒服，拍自己大腿不舒服，拍肚子也不舒服，拍胳膊也不舒服，我一拍脑门。脑子是个好东西，诶，舒服了，我想到了锦江。
+
+        """
+        self.image.lock()
+        I_in_map_x=I_missile_x-self.rect.left
+        I_in_map_y=I_missile_y-self.rect.top
+        for I_x in range(I_in_map_x-I_missile_r,I_in_map_x+I_missile_r):
+            for I_y in range(I_in_map_y-I_missile_r,I_in_map_y+I_missile_r):
+                #pow(x,2)和x**2 是x的2次方。
+                
+                if (I_x-I_in_map_x)**2+(I_y-I_in_map_y)**2<I_missile_r**2:
+                    
+                    self.image.set_at((I_x,I_y),(0,0,0,0))
+        self.image.unlock()
+        self.mask=pygame.mask.from_surface(self.image)
+        
+
+
+
+class missile(pygame.sprite.Sprite):
+    def __init__(self,missile_image,missile_initial_position):
+        pygame.sprite.Sprite.__init__(self)
+        #最好表皮直接用。image，因为组里的引用，默认是spr。image。  rect也是一样的道理,还有rect。topleft 也是。碰撞要用，血一般教训。
+        self.image=missile_image
+        self.rect=self.image.get_rect()
+        self.rect.topleft=missile_initial_position
+        self.mask=pygame.mask.from_surface(self.image)
+        self.explore_image=0
+
+
+    def move(self,I_overlap):
+        """失败品
+        if missile_column>0 :
+            if self.rect.top+missile_column+self.rect.height<screen_height:
+                #pass?
+                self.rect.top=self.rect.top
+            elif testcollide==[]
+            else:
+                self.rect.top=self.rect.top+missile_column
+
+        elif missile_column<0 :
+            if self.rect.top+missile_column<0:
+                self.rect.top=self.rect.top
+            else :
+                self.rect.top=self.rect.top+missile_column
+
+        if missile_row<0 :
+            if self.rect.left+missile_row<0:
+                self.rect.left=self.rect.left
+            else:
+                self.rect.left=self.rect.left+missile_row
+        elif missile_row>0 :
+        """
+        #在函数中 除了等号的赋值，其他的都要用global。
+        global a_missile_state
+        if a_missile_state==0: 
+            if I_overlap:
+                #这样写。有BUG。。。。写到一半想起来太可怕了。如果这个图形是U，那么当U的内侧底部被摸到，图形就击穿了！！！
+                #可以写成勘测触碰点是否增加。只能向减少方向运动。不过也有BUG。这个先用着
+                if I_overlap[0]>=(self.rect.width//2):
+                    self.rect.left-=1
+                if I_overlap[0]<(self.rect.width//2):
+                    self.rect.left+=1
+                if I_overlap[1]>=(self.rect.height//2):
+                    self.rect.top-=1
+                if I_overlap[1]<(self.rect.height//2):
+                    self.rect.top+=1
+
+                    
+                
+            else:
+                if missile_column>0 :
+                    if self.rect.top+missile_column+self.rect.height<screen_height:
+                        self.rect.top=self.rect.top+missile_column
+                                            
+                elif missile_column<0 :
+                    if self.rect.top+missile_column>0:
+                        self.rect.top=self.rect.top+missile_column
+                            
+                if missile_row<0 :
+                    if self.rect.left+missile_row>0:
+                        self.rect.left=self.rect.left+missile_row
+                            
+                elif missile_row>0 :
+                    if self.rect.left+missile_row<screen_width-self.rect.width:
+                        self.rect.left=self.rect.left+missile_row
+
+
+    def explore(self):
+        global a_missile_state
+        if a_missile_state==0:
+            pass
+            
+        elif a_missile_state==60:
+            a_missile_state=0
+            missile001.empty()
+
+            
+        else:
+            self.explore_image=pygame.transform.scale2x(self.image.copy())
+            self.explore_image.fill((0,0,0,0))
+            self.image.fill((0,0,0,0))
+            if a_missile_state%10 >5:
+               pygame.draw.circle(self.explore_image,(255,0,0,255),(self.rect.width,self.rect.height),min(self.rect.width,self.rect.height))
+
+            else :
+                pygame.draw.circle(self.explore_image,(0,0,255,255),(self.rect.width,self.rect.height),min(self.rect.width,self.rect.height))
+                
+            
+            
+            screen.blit(self.explore_image,(self.rect.left-self.rect.width//2,self.rect.top-self.rect.height//2))
+            a_missile_state=a_missile_state+1
+        
+
+    def update(self,overlap):
+
+
+        self.explore()
+        self.move(overlap)
+        
+
+        
+            
+def surface_convert(origial_image,*width_and_height):
+    
+    container_suface_01=pygame.image.load(origial_image).convert_alpha()
+    #PNG等格式支持alpha通道
+    if width_and_height==():
+        container_suface_02=container_suface_01
+    else:
+        container_suface_02=pygame.transform.scale(container_suface_01,width_and_height)
+    return container_suface_02
+
+
+screen_width=600
+screen_height=400
+
+
+"""
+-----------------------------------------------初态条件---------------------------------
+"""
+pygame.init()
+screen=pygame.display.set_mode((screen_width,screen_height))
+pygame.display.set_caption('explore')
+
+
+map_picture=surface_convert("IMG/map.png")
+
+clock=pygame.time.Clock()
+
+maptest001=map(map_picture,(100,248))
+
+missile_row=0
+missile_column=0
+missile001=pygame.sprite.GroupSingle()
+def create_missile():
+    missile001.add(missile(surface_convert("IMG/missile.png"),(200,200)))
+a_missile_state=0
+
+"""为了可以贴着奇怪的地形走"""
+testcollide=[]
+testoverlap=()
+"""导弹在地图的什么地方，X相对位置=missile001.rect.left-maptest001.rect.left
+Y相对位置=missile001.rect.top-maptest001.rect.top"""
+
+"""
+-----------------------------------------------主循环---------------------------------
+"""
+
+#主循环里不能再有循环。
+while 1 :
+    clock.tick(60)
+
+    screen.fill([0,255,0,255])
+    screen.blit(maptest001.image,maptest001.rect.topleft)
+    if missile001.sprites()!=[]:
+        missile001.draw(screen)
+        testcollide=pygame.sprite.spritecollide(maptest001,missile001,0,pygame.sprite.collide_mask)
+        for x in missile001:
+            testoverlap=x.mask.overlap(maptest001.mask,(maptest001.rect.left-x.rect.left,maptest001.rect.top-x.rect.top))
+
+
+    for event in pygame.event.get():
+        if event.type== pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+        
+        if event.type==pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                missile_column-=2
+            elif event.key==pygame.K_DOWN:
+                missile_column+=2
+            elif event.key==pygame.K_LEFT:
+                missile_row-=2
+            elif event.key==pygame.K_RIGHT:
+                missile_row+=2
+            elif event.key==pygame.K_a:
+                a_missile_state=0
+                create_missile()
+
+                
+                
+            elif event.key==pygame.K_s:
+                if len(missile001.sprites())==0:
+                    print(r'create a missile ,perss "a".') #在 ’和“ 前面各插入一个转义字符\ 。 注：转义字符\不计入字符串的内容。 
+                else:
+                    if a_missile_state<1:
+                    #状态参数，0是没事，1是爆炸。
+                        a_missile_state=1
+                        for I_m in missile001:
+                            maptest001.destructible(I_m.rect.left+I_m.rect.width//2,I_m.rect.top+I_m.rect.height//2,min(I_m.rect.width,I_m.rect.height))
+            
+                
+
+
+        if event.type==pygame.KEYUP:
+            
+            if event.key == pygame.K_UP:
+                missile_column+=2
+            elif event.key==pygame.K_DOWN:
+                missile_column-=2
+            elif event.key==pygame.K_LEFT:
+                missile_row+=2
+            elif event.key==pygame.K_RIGHT:
+                missile_row-=2
+    
+    missile001.update(testoverlap)
+    #打完收工display。update
+    pygame.display.update()
+                
